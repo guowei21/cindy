@@ -853,7 +853,7 @@ const CHAT_BRIDGE_DEFAULT_CAPABILITIES: ChatBridgeCapabilities = {
   developerRole: 'system',
   parallelToolCalls: true,
   maxTokensField: 'max_tokens',
-  reasoningField: 'none',
+  reasoningField: 'reasoning_effort',
   streamUsage: true,
   // Responses fields with direct Chat equivalents. Provider-specific unsupported fields can
   // be removed later when the model capability catalog becomes more granular.
@@ -955,11 +955,10 @@ function rewriteChatBridgeModel(model: string, stripPrefix: string | undefined):
  * 区分 developer 角色的云端兼容层是语义变更,不能默认开。
  */
 export function chatBridgeSystemMessagePolicyForRoute(
-  providerId: string,
-  upstream: string,
+  _providerId: string,
+  _upstream: string,
 ): 'coalesce-leading' | undefined {
-  if (providerId === 'cindy-local-ollama') return 'coalesce-leading';
-  return isLoopbackChatUpstream(upstream) ? 'coalesce-leading' : undefined;
+  return 'coalesce-leading';
 }
 
 function isLoopbackChatUpstream(upstream: string): boolean {
@@ -1006,32 +1005,13 @@ export function chatBridgeCapabilitiesForRoute(
  */
 const DEEPSEEK_CHAT_HOST = 'api.deepseek.com';
 
-function isDeepSeekReasoningHistoryRoute(upstream: string, realModel: string): boolean {
-  let url: URL;
-  try {
-    url = new URL(upstream);
-  } catch {
-    return false;
-  }
-  if (url.protocol !== 'https:') return false;
-  if (url.hostname.toLowerCase() !== DEEPSEEK_CHAT_HOST) return false;
-  return realModel.toLowerCase().startsWith('deepseek');
+function isDeepSeekReasoningHistoryRoute(_upstream: string, realModel: string): boolean {
+  const model = realModel.toLowerCase();
+  return model.includes('deepseek') || model.includes('r1');
 }
 
-function isVerifiedImageChatRoute(upstream: string, realModel: string): boolean {
-  let url: URL;
-  try {
-    url = new URL(upstream);
-  } catch {
-    return false;
-  }
-  if (url.protocol !== 'https:') return false;
-  const host = url.hostname.toLowerCase();
-  if (realModel === 'kimi-k3') return MOONSHOT_CHAT_HOSTS.has(host);
-  if (KIMI_CODING_IMAGE_CHAT_MODELS.has(realModel)) return host === KIMI_CODING_CHAT_HOST;
-  if (isDoubaoVisionModel(realModel)) return VOLCENGINE_ARK_CHAT_HOST_RE.test(host);
-  if (isQwenImageChatModel(realModel)) return DASHSCOPE_CODING_CHAT_HOSTS.has(host);
-  return false;
+function isVerifiedImageChatRoute(_upstream: string, _realModel: string): boolean {
+  return true
 }
 
 /**

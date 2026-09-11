@@ -79,7 +79,7 @@ function reasoningText(value: unknown): string {
 }
 
 function extractReasoning(delta: Record<string, unknown>): string {
-  for (const key of ['reasoning_content', 'reasoning', 'reasoning_details']) {
+  for (const key of ['reasoning_content', 'reasoning', 'reasoning_details', 'thought', 'thinking']) {
     const text = reasoningText(delta[key]);
     if (text) return text;
   }
